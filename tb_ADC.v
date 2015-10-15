@@ -46,7 +46,7 @@ module tb_ADC;
 		.SPI_MOSI(SPI_MOSI), 
 		.AMP_CS(AMP_CS), 
 		.SPI_SCK(SPI_SCK), 
-		.AMP_SHDN(AMP_SHDN), 
+//		.AMP_SHDN(AMP_SHDN), 
 		.AD_CONV(AD_CONV)
 	);
 

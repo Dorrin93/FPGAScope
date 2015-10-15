@@ -24,28 +24,30 @@ module ADC(
 	 output [31:0] adcReg,
 	 output [7:0] ledy
     );
-	 localparam init=4'd0,
-	 write1=4'd1, //SPI_SCK niski
-	 write2=4'd2, //SPI_SCK wysoki
-	 incrementGain=4'd3,
-	 write3 = 4'd4, //tutaj czekamy 20ns
-	 endWrite=4'd5, //amplifier write skonczony
-	 startRead=4'd6, //start odczytu z ADC
-	 wait1=4'd7, //przepuszczamy 2 bity niski
-	 wait2=4'd8, //wysoki
-	 read1=4'd9, //read wysoki, czekamy na wyjscie
-	 read2=4'd10, //read wysoki, odczyt
-	 read3=4'd12, //read niski\
-	 incrementOutReg=4'd11,
-	 endRead1=4'd13,
-	 endRead2=4'd14,
+	 localparam init=5'd0,
+	 write0=5'd18,
+	 write1=5'd1, //SPI_SCK niski
+	 write2=5'd2, //SPI_SCK wysoki
+	 incrementGain=5'd3,
+	 write3 = 5'd4, //tutaj czekamy 20ns
+	 endWrite=5'd5, //amplifier write skonczony
+	 startRead=5'd6, //start odczytu z ADC
+	 wait1=5'd7, //przepuszczamy 2 bity niski
+	 wait2=5'd8, //wysoki
+	 read1=5'd9, //read wysoki, czekamy na wyjscie
+	 read2=5'd10, //read wysoki, odczyt
+	 read3=5'd12, //read niski\
+	 incrementOutReg=5'd11,
+	 endRead1=5'd13,
+	 endRead2=5'd14,
 	// finish=5'd15,
-	 incrementWait=4'd15;
-	 
+	 incrementWait=5'd15,
+	 waiter1=5'd16,
+	 waiter2=5'd17;
 	 
 	 reg after;
-	 reg [3:0] st;
-	 reg [3:0] nst;
+	 reg [4:0] st;
+	 reg [4:0] nst;
 	 
 	 reg [2:0] counter6;
 	 reg [5:0] counter10;
@@ -53,6 +55,7 @@ module ADC(
 	 reg [4:0] counter20;
 	 reg [4:0] counter30;
 	 reg [5:0] counter50;
+	 reg [9:0] counter200;
 	 reg echoRegOut;
 	 reg outRegReady,reset50,reset30,reset20,incRegIndex,resetOutReg,resetGain,resetWait,incGain,incWait,reset6,reset10,reset10_2;
 	 reg [7:0] GAIN;
@@ -79,6 +82,14 @@ module ADC(
 		end
 		else
 			st<=nst;
+	 ////////////////////Licznik startowy
+	 always @(posedge clk, posedge rst)
+		if(rst)
+			counter200<=10'd200;
+		else if(counter200==0)
+			counter200<=10'd200;
+		else
+			counter200<=counter200-1;
 	 ////////////////////Licznik 30 dla amplifier
 	 always @(posedge clk, posedge rst)
 		if(rst)
@@ -171,9 +182,18 @@ module ADC(
 		case(st)
 			init : begin
 				after=0;
+				SPI_MOSI=0;
+				AMP_CS=0;
 				resetGain=1;
+				reset20=1;
+				nst=counter200 ? init : write0;
+			end
+			write0: begin
 				reset30=1;
-				nst=write1;
+				after=0;
+				reset20=0;
+				AMP_CS=1;
+				nst=counter20 ? write0 : write1;
 			end
 			write1: begin
 				after=0;
@@ -274,9 +294,19 @@ module ADC(
 				reset30=1;
 				after=0;
 				resetOutReg=1;
-				nst = counter20 ? endRead2 : indexWait==3'd0 ? endWrite : endRead1;
+				nst = counter20 ? endRead2 : indexWait==3'd0 ? waiter1/*endWrite*/ : endRead1;
 			end
-			
+			waiter1: begin
+				AD_CONV=1;
+				reset20=1;
+				after=0;
+				nst=counter30 ? waiter1 : waiter2;
+			end
+			waiter2: begin
+				reset30=1;
+				after=0;
+				nst=counter20 ? waiter2 : endWrite;
+			end
 		endcase
 	end
 	
@@ -289,8 +319,8 @@ module ADC(
 	always@(posedge clk, posedge rst) begin
 		if(rst)
 			outReg<=30'b0100100001001110;
-		//else if (outRegReady)
-			//outReg[outRegIndex]<=AD_DOUT;
+		else if (outRegReady)
+			outReg[outRegIndex]<=AD_DOUT;
 	end
 	/*
 	reg [7:0] tmp;

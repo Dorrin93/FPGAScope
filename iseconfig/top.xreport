@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <report-views version="2.0" >
  <header>
-  <DateModified>2015-10-15T12:57:11</DateModified>
+  <DateModified>2015-10-15T14:14:53</DateModified>
   <ModuleName>top</ModuleName>
-  <SummaryTimeStamp>2015-10-15T12:50:28</SummaryTimeStamp>
+  <SummaryTimeStamp>2015-10-15T14:11:59</SummaryTimeStamp>
   <SavedFilePath>/home/lab_jos/KubaPawel/FPGAScope/iseconfig/top.xreport</SavedFilePath>
   <ImplementationReportsDirectory>/home/lab_jos/KubaPawel/FPGAScope/</ImplementationReportsDirectory>
   <DateInitialized>2015-09-03T12:08:54</DateInitialized>
