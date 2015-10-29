@@ -19,7 +19,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module REG_SPLITTER(
-    input clk, rst, write,
+    input clk, rst, write, newData,
     input [31:0] adcReg,
 	 output reg enable,
     output reg [7:0] register
@@ -53,9 +53,14 @@ module REG_SPLITTER(
 	always @(posedge clk,posedge rst)
 		if(rst)
 			enable<=0;
-		else if(write)
+		else if(write && )
 			enable<=1;
-		
+			
+	always @(posedge clk,posedge rst)
+		if(rst)
+			buffer<=32'b0;
+		else if(newData)
+			enable<=adcReg;
 			
 		
 	

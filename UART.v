@@ -26,16 +26,14 @@ module UART(
 	 output reg write
     );
 	 reg [14:0] clockdiv;
-	 //reg start=1;
 
 	 wire serclock = (clockdiv == 0);
 	always @(posedge clk,posedge rst) 
 		begin
 			if(rst)
 				clockdiv<=0;
-			//else if(enable)
-			//	clockdiv<=0;
-			else if (clockdiv == 5207) 
+			else if (clockdiv == 5207) //9600 baud - 5207
+											 //921600
 				clockdiv <= 0;
 			else
 				clockdiv <= clockdiv + 1;
@@ -61,7 +59,8 @@ module UART(
 				4'b1001: if (serclock) state <= 4'b1010;   
 				4'b1010: if (serclock) state <= 4'b0000;    
 				default: state <= 4'b0000;			
-				endcase end
+			endcase 
+		end
 	end
 
 
@@ -84,7 +83,7 @@ module UART(
          4'b1000: outbit <= dataToSend[6];        // Bit 6
          4'b1001: outbit <= dataToSend[7];        // Bit 7
          4'b1010: outbit <= 1;          // Stop bit
-         default: outbit <= 1;          // Bad state output idle
+         default: outbit <= 1;          
 		endcase end
 	end
 	
