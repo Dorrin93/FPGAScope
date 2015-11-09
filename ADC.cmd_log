@@ -1,2 +1,0 @@
-vhdtdtfi -lib work /home/lab_jos/KubaPawel/FPGAScope/ADC.v -lang verilog -prj FPGAScope -o ADC.spl -module ADC -template /opt/xilinx/ISE//data/splveri.tft -deleteonerror 
-spl2sym -intstyle ise -family spartan3a ADC.spl /home/lab_jos/KubaPawel/FPGAScope/ADC.sym 
