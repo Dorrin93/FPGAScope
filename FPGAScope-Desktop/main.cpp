@@ -1,11 +1,25 @@
 #include "frontpanel.hpp"
 #include <QApplication>
+#include <QDebug>
+#include "controller/controller.hpp"
+#include "model/coreunit.hpp"
+#include <thread>
+
 
 int main(int argc, char *argv[])
 {
+    qDebug() << "start";
     QApplication a(argc, argv);
-    FrontPanel w;
-    w.show();
+    FPGAScope::FrontPanel w;
+    FPGAScope::CoreUnit cu;
+    cu.initUART("/dev/pts/1", 115200);
+    // /dev/ttyS2
+    FPGAScope::Controller c(&w, &cu);
 
-    return a.exec();
+    c.start();
+    w.show();
+    a.exec();
+    c.quit();
+    c.wait();
+    return 0;
 }
