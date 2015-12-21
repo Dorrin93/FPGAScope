@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     FPGAScope::FrontPanel w;
     FPGAScope::CoreUnit cu;
-    cu.initUART("/dev/pts/1", 115200);
+    cu.initUART("/dev/pts/2", 115200);
     // /dev/ttyS2
     FPGAScope::Controller c(&w, &cu);
 

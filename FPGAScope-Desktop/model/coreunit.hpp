@@ -4,6 +4,7 @@
 #include "cyclicbuffer.hpp"
 #include <functional>
 #include <memory>
+#include <cmath>
 
 namespace FPGAScope{
 
@@ -18,15 +19,30 @@ public:
     void initUART(std::string portName, unsigned baudRate);
     void rawPackage(unsigned char pack[]);
     void decode(double &channelA, double &channelB);
-    double *dataBase() const;
-    double *dataA() const;
-    double *dataB() const;
+    void setDataA();
+    void setDataB();
+
+    const double *dataBase() const { return _buffer.baseData(); }
+    const double *dataA()    const { return _triggeredA.data(); }
+    const double *dataB()    const { return _triggeredB.data(); }
+
+    void setTriggerA(double val) { _triggerAVal = val; }
+    void setTriggerB(double val) { _triggerBVal = val; }
+    void setSlope(bool state)    { _risingSlope = state; }
+    double getTriggerA() const {return _triggerAVal; }
+    double getTriggerB() const {return _triggerBVal; }
 
 private:
-    std::unique_ptr<UARTReceiver> _receiver;
-    std::unique_ptr<CyclicBuffer> _buffer;
-    double transform(int read){ return -read * 1.25 / 8192 + 1.65; }
+    double _triggerAVal = 3;
+    double _triggerBVal = 3;
+    bool _risingSlope = true;
+    dVec _triggeredA;
+    dVec _triggeredB;
 
+    CyclicBuffer _buffer;
+    std::unique_ptr<UARTReceiver> _receiver;
+
+    double transform(int read){ return -read * 1.25 / 8192 + 1.65; }
 
 };
 }

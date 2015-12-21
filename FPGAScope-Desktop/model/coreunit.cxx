@@ -2,20 +2,26 @@
 #include <QDebug>
 #include <QString>
 
-FPGAScope::CoreUnit::CoreUnit()
-{
-    _buffer = std::make_unique<CyclicBuffer>();
-}
+FPGAScope::CoreUnit::CoreUnit() : _triggeredA(100, 0), _triggeredB(100, 0), _buffer(300)
+{}
 
 FPGAScope::CoreUnit::~CoreUnit()
 {}
 
 void FPGAScope::CoreUnit::doubleChannelTransmission()
 {
+    static long step = 0;
+    static bool swt = false;
     double a, b;
     decode(a, b);
-    _buffer.get()->addToChannelA(a);
-    _buffer.get()->addToChannelB(b);
+    swt ? a = 1.5 : a = 0.5;
+    if(!(step % 6)) swt = !swt;
+    b = sin(step*M_PI/2)*0.5 + 1;
+    ++step;
+    _buffer.addToChannelA(a);
+    _buffer.addToChannelB(b);
+    setDataA();
+    setDataB();
 }
 
 void FPGAScope::CoreUnit::initUART(std::string portName, unsigned baudRate)
@@ -36,15 +42,9 @@ void FPGAScope::CoreUnit::decode(double &channelA, double &channelB)
     int mask2 = 0b0001111111111111;
 
     unsigned char package[4];
-    //_receiver->readPackageAsync(package);
     _receiver.get()->readPackageAsync(package);
-    // DEBUG
-    /*
-    package[0] = 32;
-    package[1] = 0;
-    package[2] = 63;
-    package[3] = 255;
-    */
+    //_receiver.get()->readPackage(package);
+
     int reads[2] = {0};
     reads[0] = (package[0] << 8) | (package[1] & 0xff);
     reads[1] = (package[2] << 8) | (package[3] & 0xff);
@@ -57,29 +57,53 @@ void FPGAScope::CoreUnit::decode(double &channelA, double &channelB)
     if(reads[1] & signMask)
         reads[1] = (reads[1]&mask2)-8192;
 
-
+    /*
     qDebug() << transform(reads[0]);
     qDebug() << transform(reads[1]);
     qDebug() << QString::number(reads[0], 2);
     qDebug() << QString::number(reads[1], 2);
+    */
+
     //qDebug() << transform(0b10000000000000);
     channelA = transform(reads[0]);
     channelB = transform(reads[1]);
 
 }
 
-double *FPGAScope::CoreUnit::dataBase() const
+void FPGAScope::CoreUnit::setDataA()
 {
-    return _buffer.get()->baseData();
+    _triggeredA.clear();
+    auto iterA = _buffer.beginA();
+    for(auto i = iterA; i != _buffer.endA()-1; ++i){
+        if( (_triggerAVal >= *i && _triggerAVal <= *(i+1) && _risingSlope) ||
+            (_triggerAVal <= *i && _triggerAVal >= *(i+1) && !_risingSlope) ){
+            iterA = i+1;
+            break;
+        }
+    }
+
+    if(iterA+100 <= _buffer.endA())
+        std::copy(iterA, iterA+100, _triggeredA.begin());
+    else
+        std::copy(iterA, _buffer.endA(), _triggeredA.begin());
+
 }
 
-double *FPGAScope::CoreUnit::dataA() const
+void FPGAScope::CoreUnit::setDataB()
 {
-    return _buffer.get()->channelAData();
-}
+    _triggeredB.clear();
+    auto iterB = _buffer.beginB();
+    for(auto i = iterB; i != _buffer.endB()-1; ++i){
+        if( (_triggerBVal >= *i && _triggerBVal <= *(i+1) && _risingSlope) ||
+            (_triggerBVal <= *i && _triggerBVal >= *(i+1) && !_risingSlope) ){
+            iterB = i+1;
+            break;
+        }
+    }
 
-double *FPGAScope::CoreUnit::dataB() const
-{
-   return _buffer.get()->channelBData();
+    if(iterB+100 <= _buffer.endB())
+        std::copy(iterB, iterB+100, _triggeredB.begin());
+    else
+        std::copy(iterB, _buffer.endB(), _triggeredB.begin());
 }
 

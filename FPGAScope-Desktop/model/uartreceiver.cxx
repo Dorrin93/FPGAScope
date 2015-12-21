@@ -30,7 +30,7 @@ void FPGAScope::UARTReceiver::readPackageAsync(unsigned char pack[])
                           bind(&read_callback, ref(data_available), ref(timeout_),
                                asio::placeholders::error,
                                asio::placeholders::bytes_transferred));
-    timeout_.expires_from_now(posix_time::milliseconds(1));
+    timeout_.expires_from_now(posix_time::milliseconds(50));
     timeout_.async_wait(bind(&wait_callback, ref(port_), asio::placeholders::error));
 
     io_.run();

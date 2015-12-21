@@ -16,11 +16,18 @@ public:
     Controller(FrontPanel *panel, CoreUnit *unit, QObject *parent = 0);
     ~Controller();
 
+public slots:
+    void setTriggerAVal(double val);
+    void setTriggerBVal(double val);
+    void triggerSwitched(char id);
+    void slopeSwitched(bool state);
+
 private slots:
     void transmit();
 
 signals:
     void updater();
+    void triggerVal(double);
 
 
 private:
