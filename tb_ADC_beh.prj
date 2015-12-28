@@ -1,0 +1,3 @@
+verilog work "ADC.v"
+verilog work "tb_ADC.v"
+verilog work "/opt/xilinx/ISE//verilog/src/glbl.v"

@@ -32,8 +32,9 @@ module UART(
 		begin
 			if(rst)
 				clockdiv<=0;
-			else if (clockdiv == 5207) //9600 baud - 5207
-											 //921600
+			else if (clockdiv == 434)  //115 200 baudow clockdiv 434
+												//9600 baud - 5207
+										
 				clockdiv <= 0;
 			else
 				clockdiv <= clockdiv + 1;
@@ -41,13 +42,14 @@ module UART(
 
 	reg [3:0] state;
 
+   
 	always @(posedge clk,posedge rst)
 		if(rst)
 			state<=4'b0000;
 		else begin
 		begin
 			case (state)
-				4'b0000: if (enable) state <= 4'b0001;
+				4'b0000: if (serclock && enable) state <= 4'b0001; //startujemy z wysylka jesli mamy nowe dane (enabled)
 				4'b0001: if (serclock) state <= 4'b0010;    
 				4'b0010: if (serclock) state <= 4'b0011;    
 				4'b0011: if (serclock) state <= 4'b0100;    
@@ -75,15 +77,15 @@ module UART(
          4'b0000: outbit <= 1;              // idle
          4'b0001: outbit <= 0;              // Start bit
          4'b0010: outbit <= dataToSend[0];        // Bit 0
-         4'b0011: outbit <= dataToSend[1];        // Bit 1
-         4'b0100: outbit <= dataToSend[2];        // Bit 2
-         4'b0101: outbit <= dataToSend[3];        // Bit 3
-         4'b0110: outbit <= dataToSend[4];        // Bit 4
-         4'b0111: outbit <= dataToSend[5];        // Bit 5
-         4'b1000: outbit <= dataToSend[6];        // Bit 6
+         4'b0011: outbit <= dataToSend[1];        
+         4'b0100: outbit <= dataToSend[2];       
+         4'b0101: outbit <= dataToSend[3];       
+         4'b0110: outbit <= dataToSend[4];       
+         4'b0111: outbit <= dataToSend[5];        
+         4'b1000: outbit <= dataToSend[6];        
          4'b1001: outbit <= dataToSend[7];        // Bit 7
          4'b1010: outbit <= 1;          // Stop bit
-         default: outbit <= 1;          
+			default: outbit <= 1;          
 		endcase end
 	end
 	
@@ -91,12 +93,12 @@ module UART(
 	begin
 		if(rst)
 			write<=1;
-		else if(state==4'b0000)
+		else if(state==4'b0000) //gotowosc do kolejnej wysylki
 			write<=1;
-		else 
+		else							//UART TXD zajety
 			write<=0;
-		
-	end
+end
+
 
 	assign TXD=outbit;
 endmodule

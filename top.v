@@ -15,26 +15,32 @@
 //
 // Revision: 
 // Revision 0.01 - File Created
-// Additional Comments: cu -l /dev/ttyS2 -s 9600 
+// Additional Comments: cu -l /dev/ttyS2 -s 115200
 //
 //////////////////////////////////////////////////////////////////////////////////
 module top(
 input clk, rst, AMP_DOUT, AD_DOUT,
+
 output TXD, 
 SPI_MOSI, AMP_CS, SPI_SCK, AD_CONV, AMP_SHDN,
 output[7:0] ledy
     );
 
-	 //wire [31:0] adcReg2=32'b00110001001100100011001100110100; 
-	 wire [31:0] adcReg;
-	 wire [7:0] dataToSend;
-	 wire enable,writeUart,newData;
+	 wire enable;
 	 
-	 REG_SPLITTER reg_splitter(clk,rst,writeUart,newData,adcReg,enable,dataToSend);
-	 UART uart(clk,rst,enable,dataToSend,TXD,writeUart);
-	 adc_controller adcController(clk, rst, AMP_DOUT, AD_DOUT, SPI_MOSI, AMP_CS, SPI_SCK, AD_CONV, AMP_SHDN,adcReg,ledy,newData);
-	 //counter count(clk,rst,write,lcdTmp0);
-	 //decoder dec(write, clk,rst,lcdTmp0,outData);
-	 //lcd LCD(clk,rst,outData[127:120],outData[119:112],outData[111:104],outData[103:96],outData[95:88],outData[87:80],outData[79:72],outData[71:64],outData[63:56],outData[55:48],outData[47:40],outData[39:32],outData[31:24],outData[23:16],outData[15:8],outData[7:0],E, RW, RS,lcd);
-
+	 wire [31:0] din,dout;
+	 wire wr_en,rd_en,full,empty;
+	 wire [7:0] dataToSend;
+	 
+	 //kolejka fifo z danymi wychodzacymi z adc
+	 fifo adc_fifo(clk,rst,din,wr_en,rd_en,dout,full,empty); 
+	 //dzielelnie danych z adc na 8 bitowe ramki i kontroluje kiedy rozpoczyna sie wysylanie UARTem
+	 REG_SPLITTER reg_splitter(clk,rst,write,empty,dout,enable,rd_en,dataToSend);
+	 //Wysyłanie ramek przez UART
+	 UART uartTXD(clk,rst,enable,dataToSend, TXD,write);
+	 
+	 wire outclk; //zegar dla adc, podzielony dzielnikiem
+	 clockDivider clock_divider(clk,rst,outclk);
+	 adc_controller adcController(outclk, rst,AMP_DOUT, AD_DOUT, full, SPI_MOSI, AMP_CS, SPI_SCK, AD_CONV, AMP_SHDN,din,ledy,wr_en);
+	 
 endmodule

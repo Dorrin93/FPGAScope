@@ -23,18 +23,35 @@ module ADC_READER(
     input rst,
     input read,
     input AD_DOUT,
-    output reg[31:0] adcReg
+	 input AD_CONV,
+	 input full, 
+    output reg[31:0] din,
+	 output reg wr_en
     );
 
-	always @(posedge clk,posedge rst) 
+	reg[31:0] adcReg;
+	always @(negedge clk, posedge rst) 
 		begin
 			if(rst) begin
-				adcReg<=32'b00110001001100100011001100110100;
+				adcReg<=32'b0;
 			end
 			else if(read) begin
-				adcReg <= {adcReg[30:0], AD_DOUT};
+				adcReg <= {adcReg[30:0], AD_DOUT}; //zapisujemy 32 bity
 			end
 		end
 		
+	
+	always @(posedge clk,posedge rst) 
+	
+		if(rst) begin
+			din<=32'b0;
+			wr_en<=0;
+		end
+		else if(AD_CONV && (!full)) begin //jesli kolejka pelna to tracimy te paczke danych bezpowrotnie
+			din<=adcReg;
+			wr_en<=1;	//sygnal do kolejki aby zapisac wartosc z din
+		end
+		else if(!AD_CONV)
+			wr_en<=0;
 		
 endmodule

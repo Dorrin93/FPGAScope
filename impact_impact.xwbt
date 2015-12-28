@@ -1,0 +1,8 @@
+INTSTYLE=impact
+INFILE=/home/lab_jos/KubaPawel/FPGAScope/impact.xsl
+OUTFILE=/home/lab_jos/KubaPawel/FPGAScope/impact.xsl
+FAMILY=Multiple
+PART=Multiple
+WORKINGDIR=/home/lab_jos/KubaPawel/FPGAScope
+LICENSE=iMPACT
+USER_INFO=iMPACT
